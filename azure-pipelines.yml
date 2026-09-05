@@ -1,10 +1,11 @@
 trigger:
   branches:
     include:
-    - main
+      - main
   paths:
-   include:
-     - 02-aks-infra  
+    include:
+      - 02-aks-infra/**
+
 pool:
   name: dev-ado-agent
 
@@ -12,10 +13,23 @@ stages:
 - stage: teraformcodevalidation
   displayName: Terraform Code Validation
   jobs:
-  - job: terraform_init
-    displayName: terraform init
+  - job: terraform_ci
+    displayName: Terraform Validation Pipeline
     steps:
+    # 1. Format Check
     - task: TerraformTask@5
+      displayName: Terraform Format Check
+      inputs:
+        provider: 'azurerm'
+        command: 'custom'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+        outputTo: 'console'
+        customCommand: 'fmt -recursive -check'
+        environmentServiceNameAzureRM: 'ado-svc-wif'
+
+    # 2. Init (Ye step pass hoga tabhi .terraform/modules install honge)
+    - task: TerraformTask@5
+      displayName: Terraform Init
       inputs:
         provider: 'azurerm'
         command: 'init'
@@ -25,24 +39,10 @@ stages:
         backendAzureRmStorageAccountName: 'stgdevaxion01'
         backendAzureRmContainerName: 'tfstate'
         backendAzureRmKey: 'dev.terraform.tfstate'
-    
-  - job: terraform_format
-    displayName: Terraform-Format
-    steps:
-    - task: TerraformTask@5
-      inputs:
-        provider: 'azurerm'
-        command: 'custom'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
-        outputTo: 'console'
-        customCommand: 'fmt -recursive -check'
-        environmentServiceNameAzureRM: 'ado-svc-wif'
 
-  - job: terraform_validate
-    displayName: Terraform validate
-    dependsOn: terraform_init
-    steps:
+    # 3. Validate (Same workspace par modules mil jayenge)
     - task: TerraformTask@5
+      displayName: Terraform Validate
       inputs:
         provider: 'azurerm'
         command: 'validate'
