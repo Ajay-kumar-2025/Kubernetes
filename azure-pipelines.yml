@@ -48,7 +48,7 @@ stages:
         provider: 'azurerm'
         command: 'validate'
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
-
+# Linting stage
 - stage: linting
   displayName: 'Code Linting'
   jobs:
@@ -63,6 +63,7 @@ stages:
           tflint --recursive --force
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
 
+# Security scannning stage
 - stage: Security_Scans
   displayName: Security & Compliance
   jobs:
@@ -75,3 +76,43 @@ stages:
         targetType: 'inline'
         script: 'trivy fs --scanners vuln,secret,misconfig .'
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+
+# INFRA Plan stage
+- stage: Terraform_Plan
+  displayName: Infrastructure Plan Publish
+  dependsOn: 
+  - teraformcodevalidation 
+  - linting 
+  - Security_Scans
+  jobs:
+  - job: terraform_init
+    steps:
+    - task: TerraformTask@5
+      displayName: Terraform Init
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        backendServiceArm: 'ado-svc-wif'
+        backendAzureRmResourceGroupName: 'rg_dev_axion'
+        backendAzureRmStorageAccountName: 'stgdevaxion01'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'dev.terraform.tfstate'
+
+  # terraform plan   
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        commandOptions: '-out=tfplan'
+        environmentServiceNameAzureRM: 'ado-svc-wif'
+        environmentAzureRmOverrideSubscriptionID: 'f8b9a7cc-c86b-4b7e-b6a4-f255b104c115'
+    
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Terraform Plan Artifact
+      inputs:
+        targetPath: '$(Pipeline.Workspace)/02-aks-infra/environment/dev/tfplan'''
+        artifact: 'tfplan-dev'
+        publishLocation: 'pipeline'
+    
