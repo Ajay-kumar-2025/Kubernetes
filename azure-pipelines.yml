@@ -35,7 +35,7 @@ stages:
         command: 'custom'
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
         outputTo: 'console'
-        customCommand: 'terraform fmt -recursive'
+        customCommand: 'fmt -recursive -check'
         environmentServiceNameAzureRM: 'ado-svc-wif'
 
   - job: terraform_validate
