@@ -1,0 +1,118 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - 02-aks-infra/**
+
+pool:
+  name: dev-ado-agent
+
+stages:
+- stage: teraformcodevalidation
+  displayName: Terraform Code Validation
+  jobs:
+  - job: terraform_ci
+    displayName: Terraform Validation Pipeline
+    steps:
+    # Format Check
+    - task: TerraformTask@5
+      displayName: Terraform Format Check
+      inputs:
+        provider: 'azurerm'
+        command: 'custom'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+        commandOptions: '-recursive -check'
+        outputTo: 'console'
+        customCommand: 'fmt'
+        environmentServiceNameAzureRM: 'ado-svc-wif'
+
+    # Init (Ye step pass hoga tabhi .terraform/modules install honge)
+    - task: TerraformTask@5
+      displayName: Terraform Init
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        backendServiceArm: 'ado-svc-wif'
+        backendAzureRmResourceGroupName: 'rg_dev_axion'
+        backendAzureRmStorageAccountName: 'stgdevaxion01'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'dev.terraform.tfstate'
+
+    # Validate (Same workspace par modules mil jayenge)
+    - task: TerraformTask@5
+      displayName: Terraform Validate
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+# Linting stage
+- stage: linting
+  displayName: 'Code Linting'
+  jobs:
+  - job: run_tflint
+    displayName: 'Execute TFLint'
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          tflint --init
+          tflint --recursive --force
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+
+# Security scannning stage
+- stage: Security_Scans
+  displayName: Security & Compliance
+  jobs:
+  - job: run_trivy
+    continueOnError: true
+    displayName: Execute Trivy IAC Scan
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'trivy fs --scanners vuln,secret,misconfig .'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+
+# INFRA Plan stage
+- stage: Terraform_Plan
+  displayName: Infrastructure Plan Publish
+  dependsOn: 
+  - teraformcodevalidation 
+  - linting 
+  - Security_Scans
+  jobs:
+  - job: terraform_init
+    steps:
+    - task: TerraformTask@5
+      displayName: Terraform Init
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        backendServiceArm: 'ado-svc-wif'
+        backendAzureRmResourceGroupName: 'rg_dev_axion'
+        backendAzureRmStorageAccountName: 'stgdevaxion01'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'dev.terraform.tfstate'
+
+  # terraform plan   
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        commandOptions: '-out=tfplan'
+        environmentServiceNameAzureRM: 'ado-svc-wif'
+        environmentAzureRmOverrideSubscriptionID: 'f8b9a7cc-c86b-4b7e-b6a4-f255b104c115'
+    
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Terraform Plan Artifact
+      inputs:
+        targetPath: '$(Pipeline.Workspace)/02-aks-infra/environment/dev/tfplan'''
+        artifact: 'tfplan-dev'
+        publishLocation: 'pipeline'
+    
