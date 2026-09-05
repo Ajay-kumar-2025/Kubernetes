@@ -5,6 +5,9 @@ trigger:
   paths:
    include:
      - 02-aks-infra/**  
+   exclude:
+     - 01-Pod
+     - 03-yaml-intro
 pool:
   name: dev-ado-agent
 
