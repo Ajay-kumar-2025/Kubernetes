@@ -1,20 +1,20 @@
-variable "r_resource_groups" {
-  type = map(object({
-    name     = string
-    location = string
-  }))
-}
+# variable "r_resource_groups" {
+#   type = map(object({
+#     name     = string
+#     location = string
+#   }))
+# }
 
-variable "r_storage_accounts" {
-  type = map(object({
-    name                     = string
-    resource_group_name      = string
-    location                 = string
-    account_tier             = string
-    account_replication_type = string
-    container_name           = string
-  }))
-}
+# variable "r_storage_accounts" {
+#   type = map(object({
+#     name                     = string
+#     resource_group_name      = string
+#     location                 = string
+#     account_tier             = string
+#     account_replication_type = string
+#     container_name           = string
+#   }))
+# }
 
 variable "r_kubernetes_clusters" {
   type = map(object({
