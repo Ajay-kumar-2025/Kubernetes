@@ -16,7 +16,7 @@ stages:
   - job: terraform_ci
     displayName: Terraform Validation Pipeline
     steps:
-    # 1. Format Check
+    # Format Check
     - task: TerraformTask@5
       displayName: Terraform Format Check
       inputs:
@@ -28,7 +28,7 @@ stages:
         customCommand: 'fmt'
         environmentServiceNameAzureRM: 'ado-svc-wif'
 
-    # 2. Init (Ye step pass hoga tabhi .terraform/modules install honge)
+    # Init (Ye step pass hoga tabhi .terraform/modules install honge)
     - task: TerraformTask@5
       displayName: Terraform Init
       inputs:
@@ -41,7 +41,7 @@ stages:
         backendAzureRmContainerName: 'tfstate'
         backendAzureRmKey: 'dev.terraform.tfstate'
 
-    # 3. Validate (Same workspace par modules mil jayenge)
+    # Validate (Same workspace par modules mil jayenge)
     - task: TerraformTask@5
       displayName: Terraform Validate
       inputs:
@@ -50,7 +50,7 @@ stages:
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
 
 - stage: linting
-  displayName: 'Terraform Linting (TFLint)'
+  displayName: 'Code Linting'
   jobs:
   - job: run_tflint
     displayName: 'Execute TFLint'
