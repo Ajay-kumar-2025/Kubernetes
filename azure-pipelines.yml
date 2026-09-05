@@ -108,7 +108,8 @@ stages:
         commandOptions: '-out=tfplan'
         environmentServiceNameAzureRM: 'ado-svc-wif'
         environmentAzureRmOverrideSubscriptionID: 'f8b9a7cc-c86b-4b7e-b6a4-f255b104c115'
-    
+
+  # publishing plan artifacts into pipeline  
     - task: PublishPipelineArtifact@1
       displayName: Publish Terraform Plan Artifact
       inputs:
