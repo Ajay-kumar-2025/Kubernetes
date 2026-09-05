@@ -48,3 +48,32 @@ stages:
         provider: 'azurerm'
         command: 'validate'
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+
+- stage: linting
+  displayName: 'Terraform Linting (TFLint)'
+  jobs:
+  - job: run_tflint
+    displayName: 'Execute TFLint'
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          tflint --init
+          tflint --recursive
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+  - job: run_yamllint
+    displayName: Execute YAML Lint
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          if (-not (Get-Command yamllint -ErrorAction SilentlyContinue)) {
+              Write-Host "Installing yamllint via pip..."
+              python -m pip install --upgrade pip yamllint
+          }
+          
+          Write-Host "Running yamllint..."
+          yamllint -d relaxed .
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
