@@ -112,7 +112,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: Publish Terraform Plan Artifact
       inputs:
-        targetPath: '$(Pipeline.Workspace)/02-aks-infra/environment/dev/tfplan'
+        targetPath: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev/tfplan'
         artifact: 'tfplan-dev'
         publishLocation: 'pipeline'
     
