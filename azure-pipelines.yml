@@ -60,7 +60,7 @@ stages:
         targetType: 'inline'
         script: |
           tflint --init
-          tflint --recursive
+          tflint --recursive --force
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
   - job: run_yamllint
     displayName: Execute YAML Lint
