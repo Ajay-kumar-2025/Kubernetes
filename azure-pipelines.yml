@@ -23,8 +23,9 @@ stages:
         provider: 'azurerm'
         command: 'custom'
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+        commandOptions: '-recursive -check'
         outputTo: 'console'
-        customCommand: 'fmt -recursive -check'
+        customCommand: 'fmt'
         environmentServiceNameAzureRM: 'ado-svc-wif'
 
     # 2. Init (Ye step pass hoga tabhi .terraform/modules install honge)
