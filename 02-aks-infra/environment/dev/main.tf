@@ -12,4 +12,8 @@ module "kubernetes_cluster" {
  # depends_on          = [module.resource_group]
   source              = "../../module/azurerm_kubernetes_cluster"
   kubernetes_clusters = var.r_kubernetes_clusters
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 54ea4eade7b4783f6edd35f7bbf2c7786189e2b2
