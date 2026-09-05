@@ -1,0 +1,21 @@
+# resource_groups:
+#   rg1:
+#     name: dev_rg
+#     location: eastus
+#     fruits_name:
+#       - mango
+#       - banana
+#       - chuku
+#   rg2:
+#     name: prod_rg
+#     location: westus
+#     fruits_name:
+#       - orange
+#       - kiwi
+
+
+resource_groups:
+  - name: abc
+    location: eastus
+  - name: xyz
+    location: westus  
