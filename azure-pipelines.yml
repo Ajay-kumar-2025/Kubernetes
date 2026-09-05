@@ -62,3 +62,16 @@ stages:
           tflint --init
           tflint --recursive --force
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+
+- stage: Security_Scans
+  displayName: Security & Compliance
+  jobs:
+  - job: run_trivy
+    continueOnError: true
+    displayName: Execute Trivy IAC Scan
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'trivy fs --scanners vuln,secret,misconfig .'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
