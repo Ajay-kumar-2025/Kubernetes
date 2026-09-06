@@ -148,4 +148,58 @@ stages:
         targetPath: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev/tfplan'
         artifact: 'tfplan-dev'
         publishLocation: 'pipeline'
+  
+  # INFRA Apply (Deployment to Dev) stage
+- stage: Terraform_Apply_Dev
+  displayName: Deploy to Dev Environment
+  dependsOn:
+  - Terraform_Plan
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  # - deployment: apply_dev
+  #   displayName: Terraform Apply Job
+  #   environment: 'dev'
+  #   strategy:
+  #     runOnce:
+  #       deploy:
+  #         steps:
+    - job: apply_dev
+      displayName: Terraform Apply Job
+      steps:
+  # 1. Download generated tfplan from plan stage
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'current'
+          artifactName: 'tfplan-dev'
+          targetPath: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+  
+  # 2. Check & Confirm exact file location
+      - task: PowerShell@2
+        displayName: Check Plan File Path
+        inputs:
+          targetType: 'inline'
+          script: |
+            Write-Host "Checking downloaded files:"
+            Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev" -Recurse | Select-Object FullName
+  
+  # 2. Init backend state
+      - task: TerraformTask@5
+        displayName: Terraform Init
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+          backendServiceArm: 'ado-svc-wif'
+          backendAzureRmResourceGroupName: 'rg_dev_axion'
+          backendAzureRmStorageAccountName: 'stgdevaxion01'
+          backendAzureRmContainerName: 'tfstate'
+          backendAzureRmKey: 'dev.terraform.tfstate'
     
+    # 3. Apply saved tfplan directly
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'apply'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+          commandOptions: 'tfplan'
+          environmentServiceNameAzureRM: 'ado-svc-wif'
