@@ -9,6 +9,9 @@ trigger:
 pool:
   name: dev-ado-agent
 
+variables:
+- group: infracost-vg
+
 stages:
 - stage: teraformcodevalidation
   displayName: Terraform Code Validation
