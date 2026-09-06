@@ -77,15 +77,15 @@ stages:
         script: 'trivy fs --scanners vuln,secret,misconfig .'
         workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
 
-# INFRA Plan stage
+# INFRA Plan & Cost Estimation stage
 - stage: Terraform_Plan
-  displayName: Infrastructure Plan Publish
+  displayName: Infrastructure Plan & Cost Estimate
   dependsOn: 
   - teraformcodevalidation 
   - linting 
   - Security_Scans
   jobs:
-  - job: terraform_init
+  - job: terraform_init_and_plan
     steps:
     - task: TerraformTask@5
       displayName: Terraform Init
@@ -109,6 +109,22 @@ stages:
         environmentServiceNameAzureRM: 'ado-svc-wif'
         environmentAzureRmOverrideSubscriptionID: 'f8b9a7cc-c86b-4b7e-b6a4-f255b104c115'
 
+  # Convert binary tfplan to JSON (Required by Infracost)
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'custom'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        commandOptions: '-json tfplan'
+        outputTo: 'file'
+        customCommand: 'show'
+        fileName: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev/tfplan.json'
+        environmentServiceNameAzureRM: 'ado-svc-wif'
+  
+  # can also use powershell script for converting into jason
+  # cd $(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev
+  # terraform show -json tfplan > tfplan.json
+  
   # publishing plan artifacts into pipeline  
     - task: PublishPipelineArtifact@1
       displayName: Publish Terraform Plan Artifact
