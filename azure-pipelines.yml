@@ -22,7 +22,6 @@ stages:
     # Format Check
     - task: TerraformTask@5
       displayName: Terraform Format Check
-      continueOnError: true
       inputs:
         provider: 'azurerm'
         command: 'custom'
