@@ -173,6 +173,15 @@ stages:
           artifactName: 'tfplan-dev'
           targetPath: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
   
+  # 2. Check & Confirm exact file location
+      - task: PowerShell@2
+        displayName: Check Plan File Path
+        inputs:
+          targetType: 'inline'
+          script: |
+            Write-Host "Checking downloaded files:"
+            Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev" -Recurse | Select-Object FullName
+  
   # 2. Init backend state
       - task: TerraformTask@5
         displayName: Terraform Init
@@ -192,5 +201,5 @@ stages:
           provider: 'azurerm'
           command: 'apply'
           workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
-          commandOptions: '$(System.DefaultWorkingDirectory)\02-aks-infra\environment\dev\tfplan-dev\tfplan'
+          commandOptions: 'tfplan'
           environmentServiceNameAzureRM: 'ado-svc-wif'
