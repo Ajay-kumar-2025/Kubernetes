@@ -125,6 +125,19 @@ stages:
   # cd $(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev
   # terraform show -json tfplan > tfplan.json
   
+  # Infracost CLI Setup
+    - task: InfracostSetup@2
+      displayName: Setup Infracost CLI
+      inputs:
+        apiKey: '$(INFRACOST_API_KEY)'
+        version: '0.10.x'
+  # Infracost Breakdown / Cost Calculation
+    - task: PowerShell@2
+      displayName: Calculate Infra Cost
+      inputs:
+        targetType: 'inline'
+        script: 'infracost breakdown --path $(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev/tfplan.json --format table'
+  
   # publishing plan artifacts into pipeline  
     - task: PublishPipelineArtifact@1
       displayName: Publish Terraform Plan Artifact
