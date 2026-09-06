@@ -192,5 +192,5 @@ stages:
           provider: 'azurerm'
           command: 'apply'
           workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
-          commandOptions: 'tfplan-dev/tfplan'
+          commandOptions: '$(System.DefaultWorkingDirectory)\02-aks-infra\environment\dev\tfplan-dev\tfplan'
           environmentServiceNameAzureRM: 'ado-svc-wif'
