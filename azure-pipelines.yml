@@ -172,14 +172,14 @@ stages:
     - job: apply_dev
       displayName: Terraform Apply Job
       steps:
-  # 1. Download generated tfplan from plan stage
+  # Download generated tfplan from plan stage
       - task: DownloadPipelineArtifact@2
         inputs:
           buildType: 'current'
           artifactName: 'tfplan-dev'
           targetPath: '$(tfWorkingDir)'
   
-  # 2. Check & Confirm exact file location
+  # Check & Confirm exact file location
       - task: PowerShell@2
         displayName: Check Plan File Path
         inputs:
@@ -188,7 +188,7 @@ stages:
             Write-Host "Checking downloaded files:"
             Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev" -Recurse | Select-Object FullName
   
-  # 2. Init backend state
+  # Init backend state
       - task: TerraformTask@5
         displayName: Terraform Init
         inputs:
@@ -201,7 +201,7 @@ stages:
           backendAzureRmContainerName: 'tfstate'
           backendAzureRmKey: 'dev.terraform.tfstate'
     
-    # 3. Apply saved tfplan
+    # Apply saved tfplan
       - task: TerraformTask@5
         inputs:
           provider: 'azurerm'
