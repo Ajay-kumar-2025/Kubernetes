@@ -195,7 +195,7 @@ stages:
           backendAzureRmContainerName: 'tfstate'
           backendAzureRmKey: 'dev.terraform.tfstate'
     
-    # 3. Apply saved tfplan directly
+    # 3. Apply saved tfplan
       - task: TerraformTask@5
         inputs:
           provider: 'azurerm'
