@@ -11,6 +11,12 @@ pool:
 
 variables:
 - group: infracost-vg
+- name: serviceConnection
+  value: 'ado-svc-wif'
+- name: tfRootPath
+  value: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+- name: tfWorkingDir
+  value: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
 
 stages:
 - stage: teraformcodevalidation
@@ -25,11 +31,11 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'custom'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+        workingDirectory: '$(tfRootPath)'
         commandOptions: '-recursive -check'
         outputTo: 'console'
         customCommand: 'fmt'
-        environmentServiceNameAzureRM: 'ado-svc-wif'
+        environmentServiceNameAzureRM: '$(serviceConnection)'
 
     # Init (Ye step pass hoga tabhi .terraform/modules install honge)
     - task: TerraformTask@5
@@ -37,8 +43,8 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'init'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
-        backendServiceArm: 'ado-svc-wif'
+        workingDirectory: '$(tfWorkingDir)'
+        backendServiceArm: '$(serviceConnection)'
         backendAzureRmResourceGroupName: 'rg_dev_axion'
         backendAzureRmStorageAccountName: 'stgdevaxion01'
         backendAzureRmContainerName: 'tfstate'
@@ -50,7 +56,7 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'validate'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        workingDirectory: '$(tfWorkingDir)'
 # Linting stage
 - stage: linting
   displayName: 'Code Linting'
@@ -64,7 +70,7 @@ stages:
         script: |
           tflint --init
           tflint --recursive --force
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+        workingDirectory: '$(tfRootPath)'
 
 # Security scannning stage
 - stage: Security_Scans
@@ -78,7 +84,7 @@ stages:
       inputs:
         targetType: 'inline'
         script: 'trivy fs --scanners vuln,secret,misconfig .'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra'
+        workingDirectory: '$(tfRootPath)'
 
 # INFRA Plan & Cost Estimation stage
 - stage: Terraform_Plan
@@ -95,8 +101,8 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'init'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
-        backendServiceArm: 'ado-svc-wif'
+        workingDirectory: '$(tfWorkingDir)'
+        backendServiceArm: '$(serviceConnection)'
         backendAzureRmResourceGroupName: 'rg_dev_axion'
         backendAzureRmStorageAccountName: 'stgdevaxion01'
         backendAzureRmContainerName: 'tfstate'
@@ -107,9 +113,9 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'plan'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        workingDirectory: '$(tfWorkingDir)'
         commandOptions: '-out=tfplan'
-        environmentServiceNameAzureRM: 'ado-svc-wif'
+        environmentServiceNameAzureRM: '$(serviceConnection)'
         environmentAzureRmOverrideSubscriptionID: 'f8b9a7cc-c86b-4b7e-b6a4-f255b104c115'
 
   # Convert binary tfplan to JSON (Required by Infracost)
@@ -117,12 +123,12 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'custom'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+        workingDirectory: '$(tfWorkingDir)'
         commandOptions: '-json tfplan'
         outputTo: 'file'
         customCommand: 'show'
         fileName: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev/tfplan.json'
-        environmentServiceNameAzureRM: 'ado-svc-wif'
+        environmentServiceNameAzureRM: '$(serviceConnection)'
   
   # can also use powershell script for converting into jason
   # cd $(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev
@@ -171,7 +177,7 @@ stages:
         inputs:
           buildType: 'current'
           artifactName: 'tfplan-dev'
-          targetPath: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+          targetPath: '$(tfWorkingDir)'
   
   # 2. Check & Confirm exact file location
       - task: PowerShell@2
@@ -188,8 +194,8 @@ stages:
         inputs:
           provider: 'azurerm'
           command: 'init'
-          workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
-          backendServiceArm: 'ado-svc-wif'
+          workingDirectory: '$(tfWorkingDir)'
+          backendServiceArm: '$(serviceConnection)'
           backendAzureRmResourceGroupName: 'rg_dev_axion'
           backendAzureRmStorageAccountName: 'stgdevaxion01'
           backendAzureRmContainerName: 'tfstate'
@@ -200,6 +206,6 @@ stages:
         inputs:
           provider: 'azurerm'
           command: 'apply'
-          workingDirectory: '$(System.DefaultWorkingDirectory)/02-aks-infra/environment/dev'
+          workingDirectory: '$(tfWorkingDir)'
           commandOptions: 'tfplan'
-          environmentServiceNameAzureRM: 'ado-svc-wif'
+          environmentServiceNameAzureRM: '$(serviceConnection)'
