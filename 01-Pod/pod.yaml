@@ -5,12 +5,15 @@ metadata:
 
 spec:
   containers:  
-  - name: nginx-container
-    image: nginx:alpine-perl
-    ports:
-      - containerPort: 80
-  - name: firefox-container
-    image:  jlesage/firefox
-    ports: 
-      - containerPort: 5800
-      
+    - name: nginx-container
+      image: nginx:alpine-perl
+      ports:
+        - containerPort: 80
+    - name: firefox-container
+      image: jlesage/firefox
+      ports: 
+        - containerPort: 5800
+
+
+
+
