@@ -1,0 +1,84 @@
+# creating network policy on nginx pod and blocking all incoming traffic
+# NetworkPolicy tabhi kaam karegi jab aapke cluster mein koi CNI Plugin install ho jo ise support karta ho (jaise Calico, Cilium, ya Weave Net).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nginx-pod-policy
+  namespace : dev
+spec:
+  podSelector: 
+    matchLabels:
+      app: nginx
+  policyTypes:
+  - Ingress
+  
+
+# policyType Ingress define kare ya na kre bydefault incoming traffic block ho jayega esko apply krte hi
+# outgoing chalu ragega, outgoing band krne ke lie explicitly - Egress likhna hoga 
+
+# creating network policy on nginx pod and blocking all incoming and outgoing traffic
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: nginx-pod-policy
+#   namespace : dev
+# spec:
+#   podSelector: 
+#     matchLabels:
+#       app: nginx
+#   policyTypes:
+#   - Ingress
+#   - Egress
+
+
+# Ingress (Aane wala traffic) Allow karne ka YAML
+
+# lets suppose we have db pod and want only backend pod can access
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: allow-backend-to-db
+#   namespace: dev
+# spec:
+#   # Kis Pod par ye rule lagana hai (Target)
+#   podSelector:
+#     matchLabels:
+#       app: db
+
+#   policyTypes:
+#   - Ingress
+
+#   # Allow Rules (Whitelist)
+#   ingress:
+#   - from:
+#     - podSelector:
+#         matchLabels:
+#           app: backend
+#     ports:
+#     - protocol: TCP
+#       port: 5432
+
+
+# Egress (Bahar jane wala traffic) Allow karne ka YAML
+
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: allow-egress-rule
+#   namespace: dev
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: backend
+#   policyTypes:
+#   - Egress
+
+#   # Sirf DB Pod ki taraf traffic bhejna allow karo
+#   egress:
+#   - to:
+#     - podSelector:
+#         matchLabels:
+#           app: db
+#     ports:
+#     - protocol: TCP
+#       port: 5432
