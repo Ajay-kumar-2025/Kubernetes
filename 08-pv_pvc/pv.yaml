@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dimple-website-storage-pv
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  azureFile:
+    secretName: azure-file-secret       # secret yaml metadata name
+    shareName: <write File share name>  # file share name
+
