@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myreplicaset
+  labels:
+    app: replica-myapp   # Replicaset label
+spec:
+  replicas: 4
+  selector:
+    matchLabels:         # matching pod labels ko monitor karta rahega
+      app: pod-nginx
+  template:              # by using this template pod will create 
+    metadata:
+      labels:
+        app: pod-nginx   # Pod label
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          imagePullPolicy: IfNotPresent
+          
+
